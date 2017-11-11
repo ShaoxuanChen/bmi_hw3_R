@@ -1,0 +1,90 @@
+---
+title: "bmi_hw3_R"
+author: "Chen Shaoxuan"
+date: "11/11/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(ggthemes)
+library(ggridges)
+library(haven)
+library(knitr)
+library(forcats)
+```
+Import data and clean data
+```{r}
+who_life_exp_data = read_csv("WHO_LifeExpectancy.csv") %>% 
+  clean_names()
+```
+
+##a).Describe dataset and the variables of interest.
+This dataset is the Global Health Observatory Data in 2012, which contains 137 entries and 12 variables of interest. The variables are country, pcgovhealth(per capital government health expend), legislation(IHR Legislation Score), coordination(IHR Coordination Score), surveillance(IHR Surveillance Score), preparedness(IHR Preparedness Score), foodsafety(IHR Food Safety Score), birthrate(Birth Rate per 1000), mlifebirth(Male Life Expectancy at ), flifebirth(Female Life Expectancy at), lifebirth(Life Expectancy at Birth), life60(Life Expectancy at Age 60).
+
+##b).Summary statistics for each of the variables of interest
+```{r}
+who_life_exp_data %>% 
+  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
+  group_by(variables) %>% 
+  summarise(n_obs = n(),
+             mean = round(mean(number), digits = 2),
+               sd = round(sd(number), digits = 2),
+           median = median(number),
+          munimum = min(number),
+           maxiun = max(number),
+        first_Qu. = quantile(number, 0.25),
+        third_Qu. = quantile(number, 0.75)
+           ) %>% 
+  knitr::kable()
+```
+
+##c) 
+###Graphical displays (histograms, boxplots, and scatterplots)
+```{r}
+
+#Geo-col
+who_life_exp_data %>% 
+  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
+  mutate(variables = as.factor(variables)) %>% 
+  ggplot(aes(x = variables, y = number, fill = variables)) +
+  geom_col() +
+   xlab("variables") + ylab("number") +
+   ggtitle("Histogram of the distribution of each variable of interest") +
+  theme(legend.position = "bottom" ,
+        plot.title = element_text(hjust = 0.5),              ######### make the title in the middle 
+        axis.text.x = element_text(angle = 90, hjust = 0.9))
+#Boxplots
+who_life_exp_data %>% 
+  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
+  mutate(variables = as.factor(variables)) %>% 
+  ggplot(aes(x = variables, y = number, fill = variables)) +
+  geom_boxplot() +
+   xlab("variables") + ylab("number") +
+   ggtitle("Histogram of the distribution of each variable of interest") +
+  theme(legend.position = "bottom" ,
+        plot.title = element_text(hjust = 0.5),              ######### make the title in the middle 
+        axis.text.x = element_text(angle = 90, hjust = 0.9))
+
+#Scatterplot
+ who_life_exp_data %>% 
+  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
+  ggplot(aes(x = variables, y = number)) +
+  geom_point(aes(color = variables)) +
+   xlab("variables") + ylab("number") +
+   ggtitle("Histogram of the distribution of each variable of interest") +
+  theme(legend.position = "bottom" ,
+        plot.title = element_text(hjust = 0.5),              ######### make the title in the middle 
+        axis.text.x = element_text(angle = 90, hjust = 0.9))
+```
+###i) Is linear regression a reasonable model for this problem? Explain why or why not.  
+   *From the plots, it is obvious that linear regression is not a reasonable model for this problem. Since the vairable "pcgovhealth" is very difference from the others. And in the plots the variables did not show a linear relationship with each other.
+   
+ii) If linearity is questionable, try a transformation of the predictor (i.e., natural logarithm). Check the relationship again.
