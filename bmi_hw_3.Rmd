@@ -49,12 +49,16 @@ who_life_exp_data %>%
 ##c) 
 ###Graphical displays (histograms, boxplots, and scatterplots)
 ```{r}
+plot_data = who_life_exp_data %>% 
+  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
+  mutate(variables = as.factor(variables)) %>%
+  group_by(variables) %>% 
+  summarise(sum = sum(number)) %>% 
+  mutate(variables = fct_reorder(variables, sum))
 
 #Geo-col
-who_life_exp_data %>% 
-  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
-  mutate(variables = as.factor(variables)) %>% 
-  ggplot(aes(x = variables, y = number, fill = variables)) +
+plot_data %>% 
+  ggplot(aes(x = variables, y = sum, fill = variables)) +
   geom_col() +
    xlab("variables") + ylab("number") +
    ggtitle("Histogram of the distribution of each variable of interest") +
@@ -62,10 +66,8 @@ who_life_exp_data %>%
         plot.title = element_text(hjust = 0.5),              ######### make the title in the middle 
         axis.text.x = element_text(angle = 90, hjust = 0.9))
 #Boxplots
-who_life_exp_data %>% 
-  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
-  mutate(variables = as.factor(variables)) %>% 
-  ggplot(aes(x = variables, y = number, fill = variables)) +
+plot_data %>% 
+  ggplot(aes(x = variables, y = sum, fill = variables)) +
   geom_boxplot() +
    xlab("variables") + ylab("number") +
    ggtitle("Histogram of the distribution of each variable of interest") +
@@ -74,9 +76,8 @@ who_life_exp_data %>%
         axis.text.x = element_text(angle = 90, hjust = 0.9))
 
 #Scatterplot
- who_life_exp_data %>% 
-  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
-  ggplot(aes(x = variables, y = number)) +
+ plot_data %>% 
+  ggplot(aes(x = variables, y = sum)) +
   geom_point(aes(color = variables)) +
    xlab("variables") + ylab("number") +
    ggtitle("Histogram of the distribution of each variable of interest") +
@@ -87,4 +88,25 @@ who_life_exp_data %>%
 ###i) Is linear regression a reasonable model for this problem? Explain why or why not.  
    *From the plots, it is obvious that linear regression is not a reasonable model for this problem. Since the vairable "pcgovhealth" is very difference from the others. And in the plots the variables did not show a linear relationship with each other.
    
-ii) If linearity is questionable, try a transformation of the predictor (i.e., natural logarithm). Check the relationship again.
+###ii) If linearity is questionable, try a transformation of the predictor (i.e., natural logarithm). Check the relationship again.
+```{r}
+log_data = who_life_exp_data %>% 
+  na.omit() %>% 
+  gather(key = "variables", value = "number", pcgovhealth:life60) %>%
+  mutate(number = number + 1 ) %>% 
+  mutate(number = log(number)) %>% 
+  mutate(variables = as.factor(variables)) %>% 
+  group_by(variables) %>% 
+  summarise(sum = sum(number)) %>% 
+  mutate(variables = fct_reorder(variables, sum)) 
+
+log_data %>% 
+  ggplot(aes(x = variables, y = sum, fill = variables)) +
+  geom_col() +
+   xlab("variables") + ylab("number") +
+   ggtitle("Histogram of the distribution of each variable of interest") +
+  theme(legend.position = "bottom" ,
+        plot.title = element_text(hjust = 0.5),              ######### make the title in the middle 
+        axis.text.x = element_text(angle = 90, hjust = 0.9))
+```
+
