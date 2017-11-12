@@ -88,7 +88,7 @@ plot_data %>%
 ###i) Is linear regression a reasonable model for this problem? Explain why or why not.  
    *From the plots, it is obvious that linear regression is not a reasonable model for this problem. Since the vairable "pcgovhealth" is very difference from the others. And in the plots the variables did not show a linear relationship with each other.
    
-###ii) If linearity is questionable, try a transformation of the predictor (i.e., natural logarithm). Check the relationship again.
+###ii) Try a natural logarithm transformation of the predictor and check the relationship.
 ```{r}
 log_data = who_life_exp_data %>% 
   na.omit() %>% 
@@ -110,3 +110,66 @@ log_data %>%
         axis.text.x = element_text(angle = 90, hjust = 0.9))
 ```
 
+    *This time, we can see the obvious linear relationships from between different variables form the plot.
+
+##d). ) Fit a linear regression where female life expectancy in a country is regressed on per capita spending on health (original or transformed). (8p) 
+
+Note: If you chose a transformation of the predictor, make sure you consider it in all aspects, including interpretation. 
+```{r}
+#At first check the relationship between "pcgovhealth" and "flifebirth"
+who_life_exp_data %>% 
+  select(pcgovhealth, flifebirth) %>% 
+   ggplot(aes(x = pcgovhealth, y = flifebirth, color = pcgovhealth)) +
+  geom_point(alpha = .8) +
+   ggtitle("Plot without logarithm transformation to predictior ") +
+  theme(legend.position = "bottom" ,
+        plot.title = element_text(hjust = 0.5))
+```
+
+It is obvious that female life expectancy is not regressed on per capita spending on health. Thus, I choose to do logarithm transformation of the predictor.
+```{r}
+pcgovhealth_flifebirth_lm_data = who_life_exp_data %>% 
+  select(pcgovhealth, flifebirth) %>%
+  mutate(pcgovhealth = log(pcgovhealth)) 
+##Check
+ pcgovhealth_flifebirth_lm_data %>% 
+  ggplot(aes(x = pcgovhealth, y = flifebirth, color = pcgovhealth)) +
+  geom_point(alpha = .8) +
+   ggtitle("Plot after logarithm transformation of the predictor ") +
+  theme(legend.position = "bottom" ,
+        plot.title = element_text(hjust = 0.5))
+```
+
+####fit the regression model
+```{r}
+reg_lm = lm(data = pcgovhealth_flifebirth_lm_data, flifebirth~pcgovhealth)
+summary(reg_lm)
+```
+
+###i) Report regression results including model coefficients, standard errors, confidence intervals (for the model parameters), test statistics and the associated p-values.
+
+```{r}
+#Calculate the 95% CI for moder parameters?
+##Beta1
+CI_data = pcgovhealth_flifebirth_lm_data 
+colnames(CI_data) <- c("x", "y")
+x = CI_data$x
+y = CI_data$y
+b_1 = sum((x-mean(x))*(y-mean(y))) / (sum((x-mean(x))^2))
+b_0 = mean(y) - b_1*mean(x)
+SSE = sum((y - b_0 - b_1*x)^2)
+MSE = SSE / 135
+s_b1 = sqrt(MSE/(sum((x-mean(x))^2)))
+CI_b_1_upper_limit = b_1 + qt(0.95, 135)*s_b1
+CI_b_1_lower_limit = b_1 - qt(0.95, 135)*s_b1
+
+###95% CI for b_1
+upper_limit_b_1 = b_1 + qt(0.95, 135)
+
+  
+
+
+```
+
+
+  As for the regression results, the intercept is 55.3524, which represents$\beta_0$ in regression model. The second row in the coefficient is slope(3.5887), which represents $\beta_1$. Standard error is 0.2372, t-value is 15.13, P-value is 2e^-16
