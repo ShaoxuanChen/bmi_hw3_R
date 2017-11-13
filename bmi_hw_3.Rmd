@@ -1,5 +1,5 @@
 ---
-title: "bmi_hw3_R"
+title: "P8130_HW3_Problem4"
 author: "Chen Shaoxuan"
 date: "11/11/2017"
 output: html_document
@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r results = "hide", message = FALSE, echo = FALSE}
 library(readr)
 library(tidyverse)
 library(janitor)
@@ -20,19 +20,20 @@ library(haven)
 library(knitr)
 library(forcats)
 ```
-Import data and clean data
-```{r}
+
+```{r results = "hide", message = FALSE, echo = FALSE}
 who_life_exp_data = read_csv("WHO_LifeExpectancy.csv") %>% 
   clean_names()
 ```
 
 ##a).Describe dataset and the variables of interest.
-This dataset is the Global Health Observatory Data in 2012, which contains 137 entries and 12 variables of interest. The variables are country, pcgovhealth(per capital government health expend), legislation(IHR Legislation Score), coordination(IHR Coordination Score), surveillance(IHR Surveillance Score), preparedness(IHR Preparedness Score), foodsafety(IHR Food Safety Score), birthrate(Birth Rate per 1000), mlifebirth(Male Life Expectancy at ), flifebirth(Female Life Expectancy at), lifebirth(Life Expectancy at Birth), life60(Life Expectancy at Age 60).
+This dataset is the Global Health Observatory Data in 2012, which contains 137 entries and 12 variables of interest. The variables are country, pcgovhealth(per capital government health expend), legislation(IHR Legislation Score), coordination(IHR Coordination Score), surveillance(IHR Surveillance Score), preparedness(IHR Preparedness Score), foodsafety(IHR Food Safety Score), birthrate(Birth Rate per 1000), mlifebirth(Male Life Expectancy at ), flifebirth(Female Life Expectancy at), lifebirth(Life Expectancy at Birth), life60(Life Expectancy at Age 60). We are interested in the female life expectancy and the government health expend.
 
 ##b).Summary statistics for each of the variables of interest
-```{r}
+```{r echo = FALSE}
 who_life_exp_data %>% 
-  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
+  select(pcgovhealth, flifebirth) %>% 
+  gather(key = "variables", value = "number", pcgovhealth:flifebirth) %>% 
   group_by(variables) %>% 
   summarise(n_obs = n(),
              mean = round(mean(number), digits = 2),
@@ -48,45 +49,42 @@ who_life_exp_data %>%
 
 ##c) 
 ###Graphical displays (histograms, boxplots, and scatterplots)
-```{r}
+```{r echo = FALSE}
 plot_data = who_life_exp_data %>% 
-  gather(key = "variables", value = "number", pcgovhealth:life60) %>% 
+  select(pcgovhealth, flifebirth) %>% 
+  gather(key = "variables", value = "number", pcgovhealth:flifebirth) %>% 
   mutate(variables = as.factor(variables)) %>%
   group_by(variables) %>% 
   summarise(sum = sum(number)) %>% 
   mutate(variables = fct_reorder(variables, sum))
+#Histogram
+who_life_exp_data %>%
+ggplot(aes(x = pcgovhealth)) +
+geom_histogram(binwidth = 67, color = "blue") + xlab("per capital government health expend")  
+  
+who_life_exp_data %>%
+ggplot(aes(x = flifebirth)) +
+geom_histogram(binwidth = 0.5, color = "blue") + xlab("Female life expectancy at birth (year)")
 
-#Geo-col
-plot_data %>% 
-  ggplot(aes(x = variables, y = sum, fill = variables)) +
-  geom_col() +
-   xlab("variables") + ylab("number") +
-   ggtitle("Histogram of the distribution of each variable of interest") +
-  theme(legend.position = "bottom" ,
-        plot.title = element_text(hjust = 0.5),              ######### make the title in the middle 
-        axis.text.x = element_text(angle = 90, hjust = 0.9))
 #Boxplots
-plot_data %>% 
-  ggplot(aes(x = variables, y = sum, fill = variables)) +
-  geom_boxplot() +
-   xlab("variables") + ylab("number") +
-   ggtitle("Histogram of the distribution of each variable of interest") +
-  theme(legend.position = "bottom" ,
-        plot.title = element_text(hjust = 0.5),              ######### make the title in the middle 
-        axis.text.x = element_text(angle = 90, hjust = 0.9))
+who_life_exp_data %>%
+ggplot(aes(x ="government health expend" ,y = pcgovhealth)) +
+geom_boxplot(color = "blue") + xlab("per capital government health expend distribution") 
+
+who_life_exp_data %>%
+ggplot(aes(x ="Female life expectancy " ,y = flifebirth)) +
+geom_boxplot(color = "blue") + xlab("Female life expectancy distribution") 
 
 #Scatterplot
- plot_data %>% 
-  ggplot(aes(x = variables, y = sum)) +
-  geom_point(aes(color = variables)) +
-   xlab("variables") + ylab("number") +
-   ggtitle("Histogram of the distribution of each variable of interest") +
-  theme(legend.position = "bottom" ,
-        plot.title = element_text(hjust = 0.5),              ######### make the title in the middle 
-        axis.text.x = element_text(angle = 90, hjust = 0.9))
+who_life_exp_data %>%
+ggplot(aes(x = pcgovhealth ,y = flifebirth)) +
+geom_point(color = "blue") + xlab("Distribution of per capital govern. health expend and female life expectancy") 
+
 ```
+
 ###i) Is linear regression a reasonable model for this problem? Explain why or why not.  
-   *From the plots, it is obvious that linear regression is not a reasonable model for this problem. Since the vairable "pcgovhealth" is very difference from the others. And in the plots the variables did not show a linear relationship with each other.
+   *From the plots, it is obvious that linear regression is not a reasonable model for this problem. Since with the increase of the capital of government expend, the female life expectancy doesn't have a linear increase, i.e., steady growth. Form the scatterplot, at first, the female life expectancy increase very quick with the increase of government health expend. However, after 2000, female life expectancy increase very slowly.
+   
    
 ###ii) Try a natural logarithm transformation of the predictor and check the relationship.
 ```{r}
